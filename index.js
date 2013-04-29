@@ -69,7 +69,7 @@ exports.processFile = function (source, dest, exclude, option) {
   var content;
   var stats;
   var flag;
-  var _exclude = [/^\./];
+  var _exclude = {};
   var self = this;
   /*
   var exp_abs = /^\//;
@@ -78,7 +78,21 @@ exports.processFile = function (source, dest, exclude, option) {
   }
   */
   if (exclude) {
-    _exclude = _exclude.concat(exclude);
+      var glob = require('glob');
+
+      var excludes = [];
+      if(exclude instanceof Array){
+          for(var i = 0; i < exclude.length; i++){
+              var pattern = exclude[i];
+              var results = glob.sync(pattern);
+              excludes = excludes.concat(results);
+          }
+      }else{
+          excludes = glob.sync(exclude);
+      }
+      for(var i = 0; i < excludes.length; i ++ ){
+          _exclude[excludes[i]] = true;
+      }
   }
   // test source is file or dir, or not a file
   try {
@@ -105,19 +119,14 @@ exports.processFile = function (source, dest, exclude, option) {
     var tmpPath, tmpDest;
     var ignoreLen = _exclude.length;
     nodes.forEach(function (v) {
-      // ignore filter
-      var m;
-      for (var n = 0 ; n < ignoreLen; n++) {
-        m = _exclude[n];
-        if (typeof m === 'string' && m === v) {
-          return;
-        } else if (typeof m === 'object' && m.test(v)) {
-          return;
-        }
-      }
+
       // process file
       tmpPath = path.join(source, v);
       tmpDest = path.join(dest, v);
+        // ignore filter
+        if(_exclude[tmpPath]){
+            return;
+        }
       self.processFile(tmpPath, tmpDest, exclude, option);
     });
   }
