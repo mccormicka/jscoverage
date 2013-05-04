@@ -30,12 +30,12 @@ exports.enableModuleCache = function (bool) {
   patch.enableModuleCache = bool;
 };
 /**
- * enableCoverage 
+ * enableCoverage
  * @param {bool} bool default is false
  */
 exports.enableCoverage = patch.enableCoverage;
 /**
- * enableInject 
+ * enableInject
  * @param {bool} bool default is true
  */
 exports.enableInject = patch.enableInject;
@@ -111,7 +111,10 @@ exports.processFile = function (source, dest, exclude, option) {
   if (flag === 'file') { // process file
     content = fs.readFileSync(source).toString();
     content = content.toString();
-    content = this.process(source, content);
+      if(!_exclude[source]){
+          content = this.process(source, content);
+      }
+
     mkdirSync(path.dirname(dest));
     fs.writeFileSync(dest, content);
   } else { // process dir
@@ -123,10 +126,6 @@ exports.processFile = function (source, dest, exclude, option) {
       // process file
       tmpPath = path.join(source, v);
       tmpDest = path.join(dest, v);
-        // ignore filter
-        if(_exclude[tmpPath]){
-            return;
-        }
       self.processFile(tmpPath, tmpDest, exclude, option);
     });
   }
